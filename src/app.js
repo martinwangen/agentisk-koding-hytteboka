@@ -6,7 +6,7 @@
 
 import { readFile } from 'node:fs/promises';
 import {
-  book, calendar, cancel, describe, drawWinner, enter, markDraw, readName, unmarkDraw, withdraw,
+  book, calendar, cancel, describe, drawWinner, enter, markDraw, readName, takeBack, unmarkDraw, withdraw,
 } from './cabin.js';
 import { calendarPage, drawPage, managerPage, messagePage } from './pages.js';
 import { currentWeek, isWeekId } from './weeks.js';
@@ -58,6 +58,7 @@ export function createApp({ store, now = () => new Date() }) {
       const weeks = calendar(store.state, today());
       send(status, managerPage({
         draws: weeks.filter((entry) => entry.draw),
+        bookings: weeks.filter((entry) => entry.booking),
         freeWeeks: weeks.filter((entry) => !entry.draw && !entry.booking).map((entry) => entry.week),
         name,
         message,
@@ -130,6 +131,11 @@ export function createApp({ store, now = () => new Date() }) {
 
     if ((match = /^\/kontorsjef\/trekningsuker\/([^/]+)\/fjern$/.exec(pathname))) {
       const result = store.change(unmarkDraw, { ...wish, week: match[1] });
+      return result.ok ? goTo('/kontorsjef') : showManager(result.status, result.message);
+    }
+
+    if ((match = /^\/kontorsjef\/bookinger\/([^/]+)\/fjern$/.exec(pathname))) {
+      const result = store.change(takeBack, { ...wish, week: match[1] });
       return result.ok ? goTo('/kontorsjef') : showManager(result.status, result.message);
     }
 

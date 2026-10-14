@@ -47,6 +47,8 @@ Gro var ikke å få tak i før første versjon ble bygget. Her er det jeg ville 
 13. **Holder det at folk skriver navnet sitt?**
     Antar: ja, og da følger det at alle kan skrive hvilket som helst navn. Hvem som helst kan altså booke eller avbestille for en annen, og hvem som helst kan åpne «For kontorsjefen» og trekke. Første versjon stoler på at folk ikke gjør det.
 
+    Gro har sett baksiden: Kari booket en uke, og dagen etter sa siden at uka var opptatt, og hun fikk ikke gitt den fra seg. Siden kjenner deg bare på navnet som er lagret i nettleseren. Bytter du telefon eller PC, eller skriver navnet litt annerledes, er du en annen. Nå kan kontorsjefen fjerne en booking på «For kontorsjefen». Er uka vunnet i en trekning, trekkes det på nytt blant de andre.
+
 14. **Hva med to som heter det samme?**
     Antar: folk skriver fullt navn. Store og små bokstaver spiller ingen rolle, så «ola nordmann» og «Ola Nordmann» er samme person. To som heter helt likt, blir én person for siden.
 

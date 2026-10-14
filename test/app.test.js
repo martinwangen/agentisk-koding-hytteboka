@@ -152,6 +152,22 @@ describe('booking', () => {
     assert.equal((await kari.post(`/uker/${AUTUMN}/book`)).status, 303);
   });
 
+  // What Gro saw: Kari booked a week yesterday, and today the page calls it taken and she cannot give it up.
+  // There is no login, so the page knows Kari only by the name in this browser. Typed differently, or on
+  // another phone or computer, she is someone else.
+  test('Kari, known by another name today, sees her own week as taken and cannot give it up', async () => {
+    assert.equal((await kari.post(`/uker/${AUTUMN}/book`)).status, 303);
+
+    for (const today of [person('Kari'), visitor]) {
+      assert.equal(await card(today, AUTUMN), 'Uke 45 2.–8. november Booket av Kari Hansen');
+    }
+
+    const refused = await person('Kari').post(`/uker/${AUTUMN}/avbestill`);
+    assert.equal(refused.status, 403);
+    assert.match(await refused.text(), /role="alert">Uke 45 er booket av Kari Hansen, ikke av deg\./);
+    assert.equal(book().bookings[AUTUMN].name, 'Kari Hansen');
+  });
+
   test('nobody books without a name, a week that is over, or a week that does not exist', async () => {
     const nameless = await visitor.post(`/uker/${AUTUMN}/book`);
     assert.equal(nameless.status, 400);
@@ -295,6 +311,41 @@ describe('for the office manager', () => {
 
     assert.equal((await visitor.post(`/kontorsjef/trekningsuker/${AUTUMN}/fjern`)).status, 303);
     assert.match(await card(ola, AUTUMN), /Ledig Book uka$/);
+  });
+
+  test('lists the weeks that are booked, with who has them', async () => {
+    await kari.post(`/uker/${AUTUMN}/book`);
+    const page = await (await visitor.get('/kontorsjef')).text();
+    assert.match(page, /<h2>Bookede uker<\/h2>/);
+    assert.match(page, /Uke 45[\s\S]*?Kari Hansen[\s\S]*?action="\/kontorsjef\/bookinger\/2026-W45\/fjern"/);
+  });
+
+  test('takes a booking away for someone who cannot give it up, so the week is free again', async () => {
+    await kari.post(`/uker/${AUTUMN}/book`);
+    const response = await visitor.post(`/kontorsjef/bookinger/${AUTUMN}/fjern`);
+    assert.equal(response.status, 303);
+    assert.equal(response.headers.get('location'), '/kontorsjef');
+    assert.deepEqual(book().bookings, {});
+    assert.match(await card(person('Kari'), AUTUMN), /Ledig Book uka$/);
+  });
+
+  test('a week taken away from the winner of a draw is drawn again among the others', async () => {
+    await ola.post(`/uker/${EASTER}/meld-pa`);
+    await kari.post(`/uker/${EASTER}/meld-pa`);
+    await visitor.post(`/trekning/${EASTER}/trekk`, { klar: 'ja' });
+    const winner = book().bookings[EASTER].name;
+
+    assert.equal((await visitor.post(`/kontorsjef/bookinger/${EASTER}/fjern`)).status, 303);
+    assert.equal(book().bookings[EASTER], undefined);
+    assert.deepEqual(book().draws[EASTER].entries.map((entry) => entry.name),
+      ['Ola Nordmann', 'Kari Hansen'].filter((name) => name !== winner));
+  });
+
+  test('says so when there is no booking to take away', async () => {
+    const response = await visitor.post(`/kontorsjef/bookinger/${AUTUMN}/fjern`);
+    assert.equal(response.status, 409);
+    assert.match(await response.text(), /role="alert">Uke 45 er ikke booket\./);
+    assert.equal((await visitor.post('/kontorsjef/bookinger/2026-W41/fjern')).status, 409);
   });
 
   test('says why a week cannot be set up, or cannot be made ordinary', async () => {

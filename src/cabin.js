@@ -90,9 +90,20 @@ export function cancel(state, { week, name, today }) {
   if (!booking) return refuse(`${Uke(week)} er ikke booket.`);
   if (!sameName(booking.name, name)) return refuse(`${Uke(week)} er booket av ${booking.name}, ikke av deg.`, 403);
 
-  delete state.bookings[week];
-  const draw = state.draws[week];
-  if (draw) draw.entries = draw.entries.filter((entry) => !sameName(entry.name, name));
+  release(state, week);
+  return done();
+}
+
+/**
+ * The office manager takes a booking away. There is no login, so someone who books on one phone, or
+ * types their name another way, cannot give the week up themselves. This is the way out for them.
+ */
+export function takeBack(state, { week, today }) {
+  const problem = weekProblem(week, today);
+  if (problem) return problem;
+  if (!state.bookings[week]) return refuse(`${Uke(week)} er ikke booket.`);
+
+  release(state, week);
   return done();
 }
 
@@ -178,6 +189,14 @@ function weekProblem(week, today) {
   if (week < today) return refuse(`${Uke(week)} er over.`);
   if (!isOpen(week, today)) return refuse(`${Uke(week)} er for langt fram til å stå i boka ennå.`);
   return null;
+}
+
+/** Frees the week. One that was won in a draw goes back to the others who entered. */
+function release(state, week) {
+  const { name } = state.bookings[week];
+  delete state.bookings[week];
+  const draw = state.draws[week];
+  if (draw) draw.entries = draw.entries.filter((entry) => !sameName(entry.name, name));
 }
 
 function nameProblem(name) {
