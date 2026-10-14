@@ -133,10 +133,10 @@ export function drawPage({ week, draw, booking, message }) {
   `);
 }
 
-export function managerPage({ draws, freeWeeks, name, message }) {
+export function managerPage({ draws, bookings, freeWeeks, name, message }) {
   return page({ title: 'For kontorsjefen', name }, html`
     <h1>For kontorsjefen</h1>
-    <p class="lead">Her velger du hvilke uker det skal trekkes lodd om, og åpner trekningen når kontoret er samlet.</p>
+    <p class="lead">Her velger du hvilke uker det skal trekkes lodd om, og åpner trekningen når kontoret er samlet. Du kan også fjerne en booking for en som ikke får sagt fra seg uka selv.</p>
     ${alert(message)}
 
     <section class="panel">
@@ -144,6 +144,14 @@ export function managerPage({ draws, freeWeeks, name, message }) {
       ${draws.length === 0 ? html`<p>Ingen uker ennå.</p>` : html`
         <ul class="draw-list">
           ${draws.map(drawRow)}
+        </ul>`}
+    </section>
+
+    <section class="panel">
+      <h2>Bookede uker</h2>
+      ${bookings.length === 0 ? html`<p>Ingen uker er booket.</p>` : html`
+        <ul class="draw-list">
+          ${bookings.map(bookingRow)}
         </ul>`}
     </section>
 
@@ -179,6 +187,22 @@ function drawRow({ week, draw, booking }) {
           <form method="post" action="/kontorsjef/trekningsuker/${week}/fjern">
             <button class="button button--quiet">Gjør om til vanlig uke</button>
           </form>` : ''}
+      </div>
+    </li>`;
+}
+
+function bookingRow({ week, booking, draw }) {
+  return html`
+    <li>
+      <p class="draw-list-title">
+        <strong>${Uke(week)}</strong>
+        <span>${formatRange(week)}</span>
+      </p>
+      <p><span class="person">${booking.name}</span>${draw ? ' vant trekningen.' : ' har hytta.'}</p>
+      <div class="row-actions">
+        <form method="post" action="/kontorsjef/bookinger/${week}/fjern">
+          <button class="button button--quiet">${draw ? 'Fjern, og trekk på nytt' : 'Fjern bookingen'}</button>
+        </form>
       </div>
     </li>`;
 }
